@@ -2,7 +2,7 @@ databaseChangeLog:
 
   - changeSet:
       id: create-user-table
-      author: itvillage
+      author: ashraful
       changes:
         - createTable:
             tableName: users

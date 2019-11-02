@@ -28,6 +28,9 @@ public class AuthRestAPIs {
     public ResponseEntity<String> registerUser(@Valid @RequestBody SignUpForm signUpRequest) {
         return signUpAndSignInService.signUp(signUpRequest);
     }
-
+    @GetMapping("/users")
+    public String getLoggedAuthId() {
+        return signUpAndSignInService.getLoggedAuthUser();
+    }
 
 }

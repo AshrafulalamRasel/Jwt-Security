@@ -16,10 +16,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -58,21 +60,21 @@ public class SignUpAndSignInService {
         strRoles.forEach(role -> {
             switch (role) {
                 case "admin":
-                    Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
+                    Role adminRole = roleRepository.findByName(RoleName.USER)
                             .orElseThrow(() -> new RuntimeException("Fail! -> Cause: User Role not find."));
                     roles.add(adminRole);
 
                     break;
                 case "pm":
-                    Role pmRole = roleRepository.findByName(RoleName.ROLE_PM)
+                    Role pmRole = roleRepository.findByName(RoleName.ADMIN)
                             .orElseThrow(() -> new RuntimeException("Fail! -> Cause: User Role not find."));
                     roles.add(pmRole);
 
                     break;
                 default:
-                    /*Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
+                    Role userRole = roleRepository.findByName(RoleName.SUPER_ADMIN)
                             .orElseThrow(() -> new RuntimeException("Fail! -> Cause: User Role not find."));
-                    roles.add(userRole);*/
+                    roles.add(userRole);
 
             }
         });
@@ -101,5 +103,29 @@ public class SignUpAndSignInService {
 
         String jwt = jwtProvider.generateJwtToken(authentication);
         return new JwtResponse(jwt);
+    }
+
+    public String getLoggedAuthUser() {
+
+        Object authUser = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Optional<String> loggedInAuthUserId = null;
+
+        if (authUser instanceof UserDetails) {
+
+            String username = ((UserDetails) authUser).getUsername();
+            loggedInAuthUserId = userRepository.findAuthUsersById(username);
+
+        }
+        else if (authUser instanceof UserDetails == false){
+            throw new RuntimeException("LoggedIn user does not  account.");
+
+        }
+        else {
+            String username = authUser.toString();
+
+            System.out.println(username);
+        }
+        return loggedInAuthUserId.get();
+
     }
 }
