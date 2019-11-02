@@ -1,0 +1,33 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: create-role-table
+      author: itvillage
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: 1
+              - column:
+                  name: name
+                  value: ROLE_USER
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: 2
+              - column:
+                  name: name
+                  value: ROLE_PM
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  value: 3
+              - column:
+                  name: name
+                  value: ROLE_ADMIN

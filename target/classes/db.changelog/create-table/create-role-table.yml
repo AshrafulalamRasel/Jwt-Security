@@ -1,0 +1,21 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: create-role-table
+      author: itvillage
+      changes:
+        - createTable:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT(255)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_patient
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false

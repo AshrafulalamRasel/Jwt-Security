@@ -1,0 +1,19 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: create-user_roles-table
+      author: itvillage
+      changes:
+        - createTable:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: BIGINT(255)
+                  constraints:
+                    nullable: false
