@@ -1,20 +1,25 @@
 package com.grokonez.jwtauthentication.security.jwt;
 
+import com.grokonez.jwtauthentication.security.services.UserPrinciple;
+import com.grokonez.jwtauthentication.security.util.JwtUtil;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
-import com.grokonez.jwtauthentication.security.services.UserPrinciple;
-
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtProvider.class);
+
+    private JwtUtil jwtUtil;
+
 
     @Value("${grokonez.app.jwtSecret}")
     private String jwtSecret;
@@ -23,17 +28,26 @@ public class JwtProvider {
     private int jwtExpiration;
 
     public String generateJwtToken(Authentication authentication) {
+        final String authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
 
         UserPrinciple userPrincipal = (UserPrinciple) authentication.getPrincipal();
+        Claims claims = Jwts.claims();
+        claims.setSubject(userPrincipal.getUsername());
+
 
         return Jwts.builder()
-		                .setSubject((userPrincipal.getUsername()))
-		                .setIssuedAt(new Date())
-		                .setExpiration(new Date((new Date()).getTime() + jwtExpiration*1000))
-		                .signWith(SignatureAlgorithm.HS512, jwtSecret)
-		                .compact();
+                .setSubject((claims.getSubject()))
+                .claim("scopes", authorities)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpiration * 1000))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
+
     }
-    
+
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
@@ -49,14 +63,14 @@ public class JwtProvider {
         } catch (IllegalArgumentException e) {
             logger.error("JWT claims string is empty -> Message: {}", e);
         }
-        
+
         return false;
     }
-    
+
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parser()
-			                .setSigningKey(jwtSecret)
-			                .parseClaimsJws(token)
-			                .getBody().getSubject();
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody().getSubject();
     }
 }

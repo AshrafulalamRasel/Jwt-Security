@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.validation.ValidationException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -51,41 +52,16 @@ public class SignUpAndSignInService {
                     HttpStatus.BAD_REQUEST);
         }
 
-        // Creating user's account
         User user = new User();
 
-        Set<String> strRoles = signUpRequest.getRole();
-        Set<Role> roles = new HashSet<>();
-
-        strRoles.forEach(role -> {
-            switch (role) {
-                case "admin":
-                    Role adminRole = roleRepository.findByName(RoleName.USER)
-                            .orElseThrow(() -> new RuntimeException("Fail! -> Cause: User Role not find."));
-                    roles.add(adminRole);
-
-                    break;
-                case "pm":
-                    Role pmRole = roleRepository.findByName(RoleName.ADMIN)
-                            .orElseThrow(() -> new RuntimeException("Fail! -> Cause: User Role not find."));
-                    roles.add(pmRole);
-
-                    break;
-                default:
-                    Role userRole = roleRepository.findByName(RoleName.SUPER_ADMIN)
-                            .orElseThrow(() -> new RuntimeException("Fail! -> Cause: User Role not find."));
-                    roles.add(userRole);
-
-            }
-        });
         String userId = UUID.randomUUID().toString();
         user.setId(userId);
         user.setName(signUpRequest.getName());
         user.setUsername(signUpRequest.getUsername());
         user.setEmail(signUpRequest.getEmail());
         user.setPassword(encoder.encode(signUpRequest.getPassword()));
-        user.setRoles(roles);
-        userRepository.save(user);
+        user.setRoles(getRolesOrThrow(signUpRequest.getRole()));
+        userRepository.saveAndFlush(user);
 
         return new ResponseEntity<String>(userId, HttpStatus.OK);
     }
@@ -115,17 +91,29 @@ public class SignUpAndSignInService {
             String username = ((UserDetails) authUser).getUsername();
             loggedInAuthUserId = userRepository.findAuthUsersById(username);
 
-        }
-        else if (authUser instanceof UserDetails == false){
+        } else if (authUser instanceof UserDetails == false) {
             throw new RuntimeException("LoggedIn user does not  account.");
 
-        }
-        else {
+        } else {
             String username = authUser.toString();
 
             System.out.println(username);
         }
         return loggedInAuthUserId.get();
 
+    }
+
+
+    private Set<Role> getRolesOrThrow(Set<String> roles2) {
+        Set<Role> roles = new HashSet<>();
+        for (String role : roles2) {
+            Optional<Role> roleOptional = roleRepository.findByName(RoleName.valueOf(role));
+            System.out.println(roleOptional.get());
+            if (!roleOptional.isPresent()) {
+                throw new ValidationException("Role '" + role + "' does not exist.");
+            }
+            roles.add(roleOptional.get());
+        }
+        return roles;
     }
 }
