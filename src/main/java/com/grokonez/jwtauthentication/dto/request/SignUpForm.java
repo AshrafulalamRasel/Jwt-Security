@@ -23,7 +23,7 @@ public class SignUpForm {
     @Size(max = 60)
     @Email
     private String email;
-    
+
     private Set<String> role;
     
     @NotBlank
